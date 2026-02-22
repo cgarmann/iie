@@ -25,15 +25,11 @@ CATEGORY_COLORS = {
     'Food & Biotech': '#F39C12',
 }
 
-print("Loading ideas from CSV")
 df = pd.read_csv("idea_sample.csv")
-print(f"Loaded {len(df)} ideas")
 
 if SAMPLE_SIZE and SAMPLE_SIZE < len(df):
     df = df.sample(n=SAMPLE_SIZE, random_state=42).reset_index(drop=True)
-    print(f"Sampled {SAMPLE_SIZE} ideas")
 
-print("Generating semantic embeddings")
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 embeddings = []
@@ -41,24 +37,16 @@ for text in tqdm(df['OriginalText'], desc="Encoding"):
     embeddings.append(model.encode(text))
 
 embeddings = np.array(embeddings)
-print(f"Generated {embeddings.shape[0]} embeddings")
-
-print(f"Reducing dimensions using {VIZ_METHOD.upper()}")
 
 if VIZ_METHOD == 'pca':
     reducer = PCA(n_components=2, random_state=42)
     coords_2d = reducer.fit_transform(embeddings)
-    explained_var = reducer.explained_variance_ratio_
-    print(f"Variance explained: {sum(explained_var):.2%}")
 else:
     reducer = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=1000)
     coords_2d = reducer.fit_transform(embeddings)
-    print("t-SNE complete")
 
 df['x'] = coords_2d[:, 0]
 df['y'] = coords_2d[:, 1]
-
-print("Creating static visualization")
 
 plt.figure(figsize=(16, 10), facecolor='#0E1117')
 ax = plt.gca()
@@ -91,10 +79,7 @@ ax.spines['right'].set_color('white')
 
 static_filename = f'static_{OUTPUT_PREFIX}{len(df)}.png'
 plt.savefig(static_filename, dpi=300, bbox_inches='tight', facecolor='#0E1117')
-print(f"Saved {static_filename}")
 plt.close()
-
-print("Creating interactive visualization")
 
 fig = go.Figure()
 
@@ -154,8 +139,5 @@ fig.update_layout(
 
 interactive_filename = f'interactive_{OUTPUT_PREFIX}{len(df)}.html'
 fig.write_html(interactive_filename)
-print(f"Saved {interactive_filename}")
 
 print("Done")
-print(f"Total ideas visualized: {len(df)}")
-print(f"Method: {VIZ_METHOD.upper()}")
