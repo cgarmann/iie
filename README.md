@@ -99,6 +99,21 @@ Thresholds (Section 8.1):
 | 0.60 – 0.80 | Warning: semantically similar |
 | < 0.60 | Accept as unique |
 
+### Semantic Landscape (t-SNE Visualization)
+
+I created a 2D scatter plot of all 1,600 ideas using t-SNE to reduce dimensions. Each point represents one idea, and the closer two points are, the more similar the ideas are.
+
+![Semantic Landscape – t-SNE visualization of 1,600 ideas across 8 categories](Figure_1.png)
+
+**Key observations:**
+- Ideas from the same category cluster together
+- Some categories overlap, reflecting genuine conceptual overlap between domains
+- SBERT captures these semantic relationships without having been trained on these specific categories
+
+(Section 10.4)
+
+---
+
 ### Algorithm 3: Dimensionality Reduction (PCA & t-SNE)
 - PCA used in the live app for real-time 2D positioning
 - t-SNE used for static visualizations with `perplexity=30`, `n_iter=1000` (Section 9.3)
