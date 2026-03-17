@@ -64,13 +64,19 @@ SBERT operates in 384-dimensional space. Two methods are used to reduce this to 
 
 The t-SNE plot below shows all 1,600 ideas reduced to 2D. Each point represents one idea — the closer two points are, the more semantically similar the ideas are. Ideas from the same category naturally cluster together, even though SBERT was never trained on these specific categories.
 
-![Semantic Landscape](Figure_1.png)
+![Semantic Landscape](figure_1.png)
 
 Each category forms its own cluster — demonstrating that SBERT captures semantic relationships without ever being trained on these specific categories.
 
 ### Baseline Clustering (TF-IDF + K-Means)
 
-The Elbow Method showed no clear elbow point, and silhouette scores stayed below 0.25 for all values of k — confirming that keyword-based clustering fails to find meaningful structure in the data.
+The Elbow Method and Silhouette Score plots confirm that keyword-based clustering produces weak separation — no clear elbow point, and silhouette scores below 0.25 for all values of k:
+
+![Elbow & Silhouette](dm_elbow_silhouette.png)
+
+The PCA visualization of the TF-IDF clusters shows poor separation compared to the SBERT semantic landscape above:
+
+![TF-IDF Clustering](dm_tfidf_clusters.png)
 
 ---
 
@@ -151,6 +157,8 @@ project/
 ├── Embedding_engine.py     # BERT embedding generation
 ├── idea_sample.csv         # Dataset (1,600 ideas)
 ├── figure_1.png            # t-SNE semantic landscape
+├── dm_elbow_silhouette.png # Elbow & Silhouette plots
+├── dm_tfidf_clusters.png   # TF-IDF PCA clustering
 ├── requirements.txt        # Python dependencies
 └── README.md
 ```
