@@ -10,23 +10,29 @@ A semantic duplicate detection system for idea management at scale. Rather than 
 
 As idea platforms scale to hundreds of thousands of entries, two problems emerge: databases lose value when filled with duplicates, and manual review of every submission becomes infeasible. The IIAE automates duplicate validation before ideas enter the database by comparing semantic meaning, not just words.
 
-The system validates new submissions against a dataset of 1,600 existing ideas and visualizes the semantic landscape in 2D.
+The system validates new submissions against a dataset of 1,600 existing ideas and visualizes the entire semantic landscape in 2D.
 
 ---
 
 ## How It Works
 
 ### Baseline Model — TF-IDF + K-Means
+
 A traditional NLP approach using word-frequency analysis. Fast and interpretable, but treats "car" and "automobile" as completely different concepts.
 
-- `TfidfVectorizer` with `max_features=5000`, `ngram_range=(1,2)`
-- `KMeans` with `n_clusters=8`
-- Silhouette Score: **0.19** (weak cluster separation — expected for keyword-based methods)
+- `TfidfVectorizer` with `max_features=5000`, `ngram_range=(1,2)`, `stop_words='english'`
+- `KMeans` with `n_clusters=8`, `n_init=10`
+- Silhouette Score: **0.19** — confirms that keyword-based clustering produces weak separation
 
 ### Core Model — Sentence-BERT (SBERT)
-Uses the `all-MiniLM-L6-v2` transformer model to generate 384-dimensional sentence embeddings, placing semantically similar ideas close together in vector space regardless of vocabulary differences.
 
-**Duplicate detection via cosine similarity:**
+Uses the `all-MiniLM-L6-v2` transformer model to generate 384-dimensional sentence embeddings. Semantically similar ideas end up close together in vector space, regardless of the words used to express them.
+
+Duplicate detection is performed via cosine similarity:
+
+```
+similarity = (A · B) / (||A|| × ||B||)
+```
 
 | Similarity | Decision |
 |---|---|
@@ -34,36 +40,54 @@ Uses the `all-MiniLM-L6-v2` transformer model to generate 384-dimensional senten
 | 0.65 – 0.85 | ⚠️ Warning: semantically similar |
 | < 0.65 | ✅ Accept as unique |
 
-**Example:**
-| Idea Pair | TF-IDF | SBERT |
-|---|---|---|
-| *"A next-gen gamified coding tutor..."* vs *"Developing a gamified coding tutor..."* | 0.67 | 0.98 |
-| *"Machine learning for crop yield"* vs *"machine learning for crop yield"* | 1.00 | 1.00 |
+**TF-IDF vs. SBERT comparison:**
 
-SBERT correctly identifies paraphrased duplicates that TF-IDF misses.
+| Idea Pair | TF-IDF | SBERT | Notes |
+|---|---|---|---|
+| *"A next-gen gamified coding tutor..."* vs *"Developing a gamified coding tutor..."* | 0.67 | 0.98 | Different wording, same meaning — SBERT wins |
+| *"Machine learning for crop yield"* vs *"machine learning for crop yield"* | 1.00 | 1.00 | Identical text — both succeed |
+
+TF-IDF detects some keyword overlap but fails to recognize paraphrasing. SBERT handles this correctly.
 
 ### Dimensionality Reduction & Visualization
-SBERT operates in 384-dimensional space. Two reduction methods are used:
 
-- **PCA** — millisecond-speed reduction for real-time visualization in the Streamlit app (~12% variance captured)
-- **t-SNE** — slower but produces clearer category separation; used for static report visualizations (`perplexity=30`, `n_iter=1000`)
+SBERT operates in 384-dimensional space. Two methods are used to reduce this to 2D:
+
+| Method | Speed | Use Case |
+|---|---|---|
+| PCA | Milliseconds | Real-time visualization in the Streamlit app (~12% variance captured) |
+| t-SNE | Slow | Static visualizations with clear category separation (`perplexity=30`, `n_iter=1000`) |
+
+---
+
+## Semantic Landscape
+
+The t-SNE plot below shows all 1,600 ideas reduced to 2D. Each point represents one idea — the closer two points are, the more semantically similar the ideas are. Ideas from the same category naturally cluster together, even though SBERT was never trained on these specific categories.
+
+![Semantic Landscape](assets/semantic_landscape.png)
+
+> **Note:** Run `python visualization.py` to generate the image, then place it in an `assets/` folder in the repository root.
 
 ---
 
 ## Dataset
 
-100,000 ideas were synthetically generated using Python's `Faker` library with a structured `category_map`. Each idea follows the template: **Action + Technology + Benefit**. A sample of 1,600 ideas (200 per category) is used in the app.
+100,000 ideas were generated synthetically using Python's `Faker` library with a structured `category_map`. Each idea follows the template: **Action + Technology + Benefit**. Generation used 8 parallel processes via `multiprocessing`, reducing runtime from minutes to seconds.
 
-| Category | Count |
-|---|---|
-| AI & Robotics | 200 |
-| Health | 200 |
-| Ocean | 200 |
-| Cybersecurity | 200 |
-| Education | 200 |
-| Food & Biotech | 200 |
-| Energy & Environment | 200 |
-| Space | 200 |
+A balanced sample of 1,600 ideas (200 per category) is used in the app:
+
+| Category | Technologies (examples) | Count |
+|---|---|---|
+| AI & Robotics | Neural network processor, autonomous delivery drone | 200 |
+| Health | Telemedicine platform, robotic surgery assistant | 200 |
+| Ocean | Deep-sea research sub, ocean plastic recovery fleet | 200 |
+| Cybersecurity | Quantum encryption key, blockchain identity vault | 200 |
+| Education | Adaptive learning software, VR classroom experience | 200 |
+| Food & Biotech | Lab-grown meat production, CRISPR gene editing tool | 200 |
+| Energy & Environment | Hydrogen fuel cell, carbon capture facility | 200 |
+| Space | Lunar base habitat, asteroid mining drill | 200 |
+
+Each embedding occupies 1,536 bytes (384 dimensions × 4 bytes per float32).
 
 ---
 
@@ -88,7 +112,6 @@ pip install -r requirements.txt
 ### Running the App
 
 ```bash
-# Launch the Streamlit web application
 streamlit run app.py
 ```
 
@@ -106,7 +129,7 @@ python dm_baseline.py
 # Regenerate the synthetic dataset
 python idea_generator.py
 
-# Regenerate BERT embeddings (takes ~2 minutes with batch processing)
+# Regenerate BERT embeddings (~2 minutes with batch processing)
 python Embedding_engine.py
 ```
 
@@ -123,6 +146,8 @@ project/
 ├── idea_generator.py       # Synthetic data generation
 ├── Embedding_engine.py     # BERT embedding generation
 ├── idea_sample.csv         # Dataset (1,600 ideas)
+├── assets/
+│   └── semantic_landscape.png  # t-SNE visualization
 ├── requirements.txt        # Python dependencies
 └── README.md
 ```
@@ -131,9 +156,12 @@ project/
 
 ## Performance
 
-- **Query speed:** ~0.2 seconds per validation
-- **Embedding generation:** ~2 minutes for 1,600 ideas (batch_size=128, vs ~83 min sequentially)
-- **Data generation:** ~seconds for 100,000 ideas (8 parallel processes via `multiprocessing`)
+| Metric | Value |
+|---|---|
+| Query validation speed | ~0.2 seconds per idea |
+| Embedding generation | ~2 min for 1,600 ideas (batch_size=128) |
+| Sequential baseline | ~83 minutes (without batching) |
+| Data generation | Seconds for 100,000 ideas (8 parallel processes) |
 
 ---
 
@@ -141,8 +169,8 @@ project/
 
 - Similarity thresholds (0.65 / 0.85) were manually tuned — not optimized on a labeled dataset
 - Memory usage scales linearly with dataset size (FAISS indexing recommended for millions of ideas)
-- General-purpose SBERT may underperform on highly specialized domain terminology without fine-tuning
-- Ideas sharing a theme but differing significantly in approach may occasionally be flagged as duplicates
+- General-purpose SBERT may underperform on highly specialized terminology without fine-tuning
+- Ideas sharing a theme but differing in approach may occasionally be flagged as duplicates
 
 ---
 
@@ -152,6 +180,7 @@ project/
 - [Sentence-Transformers](https://www.sbert.net/) — SBERT embeddings (`all-MiniLM-L6-v2`)
 - [scikit-learn](https://scikit-learn.org/) — TF-IDF, K-Means, PCA, t-SNE
 - [Faker](https://faker.readthedocs.io/) — synthetic data generation
+- [NumPy](https://numpy.org/) — vector operations and cosine similarity
 
 ---
 
