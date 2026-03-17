@@ -64,9 +64,17 @@ SBERT operates in 384-dimensional space. Two methods are used to reduce this to 
 
 The t-SNE plot below shows all 1,600 ideas reduced to 2D. Each point represents one idea — the closer two points are, the more semantically similar the ideas are. Ideas from the same category naturally cluster together, even though SBERT was never trained on these specific categories.
 
-![Semantic Landscape](assets/semantic_landscape.png)
+![Semantic Landscape](__Figure_1.png)
 
-> **Note:** Run `python visualization.py` to generate the image, then place it in an `assets/` folder in the repository root.
+Each category forms its own cluster — demonstrating that SBERT captures semantic relationships without ever being trained on these specific categories.
+
+### Baseline Clustering (TF-IDF + K-Means)
+
+For comparison, the Elbow Method and Silhouette Score plots from the baseline model:
+
+![Baseline Clustering](assets/baseline_clustering.png)
+
+No clear elbow point and low silhouette scores across all values of k confirm that keyword-based clustering fails to find meaningful structure in the data.
 
 ---
 
