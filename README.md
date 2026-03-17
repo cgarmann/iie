@@ -64,7 +64,7 @@ SBERT operates in 384-dimensional space. Two methods are used to reduce this to 
 
 The t-SNE plot below shows all 1,600 ideas reduced to 2D. Each point represents one idea — the closer two points are, the more semantically similar the ideas are. Ideas from the same category naturally cluster together, even though SBERT was never trained on these specific categories.
 
-![Semantic Landscape](figure_1.png)
+![Semantic Landscape](Figure_1.png)
 
 Each category forms its own cluster — demonstrating that SBERT captures semantic relationships without ever being trained on these specific categories.
 
