@@ -30,9 +30,9 @@ Uses the `all-MiniLM-L6-v2` transformer model to generate 384-dimensional senten
 
 | Similarity | Decision |
 |---|---|
-| > 0.80 | ❌ Reject as duplicate |
-| 0.60 – 0.80 | ⚠️ Warning: semantically similar |
-| < 0.60 | ✅ Accept as unique |
+| > 0.85 | ❌ Reject as duplicate |
+| 0.65 – 0.85 | ⚠️ Warning: semantically similar |
+| < 0.65 | ✅ Accept as unique |
 
 **Example:**
 | Idea Pair | TF-IDF | SBERT |
@@ -139,7 +139,7 @@ project/
 
 ## Known Limitations
 
-- Similarity thresholds (0.60 / 0.80) were manually tuned — not optimized on a labeled dataset
+- Similarity thresholds (0.65 / 0.85) were manually tuned — not optimized on a labeled dataset
 - Memory usage scales linearly with dataset size (FAISS indexing recommended for millions of ideas)
 - General-purpose SBERT may underperform on highly specialized domain terminology without fine-tuning
 - Ideas sharing a theme but differing significantly in approach may occasionally be flagged as duplicates
